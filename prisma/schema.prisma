@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model City {
+  id      Int    @id @default(autoincrement()) @map("id")
+  name    String @map("name")
+  stateId Int    @map("state_id")
+
+  state   State     @relation(name: "state_cities_fk", fields: [stateId], references: [id], onDelete: Cascade)
+  Address Address[]
+}
+
+model Country {
+  id      Int       @id @default(autoincrement()) @map("id")
+  name    String    @map("name")
+  states  State[]   @relation(name: "countries_states_fk")
+  Address Address[]
+}
+
+model State {
+  id        Int    @id @default(autoincrement()) @map("id")
+  name      String @map("name")
+  countryId Int    @map("country_id")
+
+  cities City[] @relation(name: "state_cities_fk")
+
+  country Country   @relation(name: "countries_states_fk", fields: [countryId], references: [id], onDelete: Cascade)
+  Address Address[]
+}
+
+model Address {
+  addressId  Int    @id @default(autoincrement()) @map("address_id")
+  address    String @map("address")
+  cityId     Int    @map("city_id")
+  stateId    Int    @map("state_id")
+  countryId  Int    @map("country_id")
+  postalCode String @map("postal_code")
+
+  city      City       @relation(fields: [cityId], references: [id])
+  state     State      @relation(fields: [stateId], references: [id])
+  country   Country    @relation(fields: [countryId], references: [id])
+  customers Customer[] @relation(name: "address_customer_fk")
+}
+
+model Customer {
+  customerId Int    @id @default(autoincrement()) @map("customer_id")
+  firstName  String @map("first_name")
+  lastName   String @map("last_name")
+
+  Addresses Address[] @relation(name: "address_customer_fk")
+}
