@@ -49,6 +49,9 @@ model Address {
   state     State      @relation(fields: [stateId], references: [id])
   country   Country    @relation(fields: [countryId], references: [id])
   customers Customer[] @relation(name: "address_customer_fk")
+
+  shippments Order[] @relation(name: "order_shipping_address_fk")
+  recipients Order[] @relation(name: "order_recipient_address_fk")
 }
 
 model Customer {
@@ -57,4 +60,19 @@ model Customer {
   lastName   String @map("last_name")
 
   Addresses Address[] @relation(name: "address_customer_fk")
+
+  orders Order[] @relation(name: "order_customer_fk")
+}
+
+model Order {
+  orderId              Int      @id @default(autoincrement()) @map("order_id")
+  customerId           Int      @map("customer_id")
+  recipientAddressId   Int      @map("recipient_address_id")
+  shippingAddressId    Int      @map("shipping_address_id")
+  shippingDate         DateTime @map("shipping_date")
+  expectedDeliveryDate DateTime @map("expected_delivery_date")
+
+  customer         Customer @relation(name: "order_customer_fk", fields: [customerId], references: [customerId])
+  recipientAddress Address  @relation(name: "order_recipient_address_fk", fields: [recipientAddressId], references: [addressId])
+  shippingAddress  Address  @relation(name: "order_shipping_address_fk", fields: [shippingAddressId], references: [addressId])
 }
