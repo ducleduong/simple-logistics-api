@@ -46,6 +46,31 @@ CREATE TABLE "Customer" (
 );
 
 -- CreateTable
+CREATE TABLE "Order" (
+    "order_id" SERIAL NOT NULL,
+    "customer_id" INTEGER NOT NULL,
+    "recipient_address_id" INTEGER NOT NULL,
+    "shipping_address_id" INTEGER NOT NULL,
+    "shipping_date" TIMESTAMP(3) NOT NULL,
+    "expected_delivery_date" TIMESTAMP(3) NOT NULL,
+    "user_id" INTEGER NOT NULL,
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("order_id")
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "user_id" SERIAL NOT NULL,
+    "first_name" TEXT NOT NULL,
+    "last_name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("user_id")
+);
+
+-- CreateTable
 CREATE TABLE "_address_customer_fk" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL
@@ -71,6 +96,18 @@ ALTER TABLE "Address" ADD CONSTRAINT "Address_state_id_fkey" FOREIGN KEY ("state
 
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "Country"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "Customer"("customer_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_recipient_address_id_fkey" FOREIGN KEY ("recipient_address_id") REFERENCES "Address"("address_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_shipping_address_id_fkey" FOREIGN KEY ("shipping_address_id") REFERENCES "Address"("address_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_address_customer_fk" ADD CONSTRAINT "_address_customer_fk_A_fkey" FOREIGN KEY ("A") REFERENCES "Address"("address_id") ON DELETE CASCADE ON UPDATE CASCADE;
