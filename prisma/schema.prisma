@@ -71,8 +71,21 @@ model Order {
   shippingAddressId    Int      @map("shipping_address_id")
   shippingDate         DateTime @map("shipping_date")
   expectedDeliveryDate DateTime @map("expected_delivery_date")
+  userId               Int      @map("user_id")
 
   customer         Customer @relation(name: "order_customer_fk", fields: [customerId], references: [customerId])
   recipientAddress Address  @relation(name: "order_recipient_address_fk", fields: [recipientAddressId], references: [addressId])
   shippingAddress  Address  @relation(name: "order_shipping_address_fk", fields: [shippingAddressId], references: [addressId])
+  user             User     @relation(name: "user_order_fk", fields: [userId], references: [userId], onDelete: Cascade)
+}
+
+model User {
+  userId    Int    @id @default(autoincrement()) @map("user_id")
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+  email     String @unique @map("email")
+  password  String @map("password")
+  username  String @unique @map("username")
+
+  orders Order[] @relation(name: "user_order_fk")
 }
