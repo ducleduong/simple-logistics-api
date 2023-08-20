@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { GetOrdersDto } from './dto/get-orders.dto';
 import { GetOrdersEntity } from './entities/get-orders.entity';
-import { CommonHeader } from '../common/header/header.dto';
+import { CommonHeader } from '../../common/header/header.dto';
 import { plainToInstance } from 'class-transformer';
+import { CreateOrderEntity } from './entities/create-order.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -64,5 +67,40 @@ export class OrderService {
     };
 
     return plainToInstance(GetOrdersEntity, result);
+  }
+
+  async createOrder(
+    header: CommonHeader,
+    body: CreateOrderDto,
+  ): Promise<CreateOrderEntity> {
+    const order = await this.prismaService.order.create({
+      data: {
+        customerId: body.customerId,
+        shippingAddressId: body.shippingAddressId,
+        recipientAddressId: body.recipientAddressId,
+        status: OrderStatus.PENDING,
+        expectedDeliveryDate: body.expectedDeliveryDate,
+        shippingDate: null,
+        userId: parseInt(header.userId),
+      },
+      select: {
+        customer: true,
+        shippingAddress: true,
+        recipientAddress: true,
+        status: true,
+        shippingDate: true,
+        expectedDeliveryDate: true,
+        orderId: true,
+      },
+    });
+
+    return plainToInstance(CreateOrderEntity, {
+      orderId: order.orderId,
+      customer: order.customer,
+      shippingAddress: order.shippingAddress,
+      recipientAddress: order.recipientAddress,
+      expectedDeliveryDate: order.expectedDeliveryDate,
+      status: order.status,
+    });
   }
 }

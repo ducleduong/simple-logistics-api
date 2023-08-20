@@ -1,5 +1,5 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterEntity } from './entities/register.entity';
 import { plainToInstance } from 'class-transformer';

@@ -58,8 +58,11 @@ model Customer {
   customerId Int    @id @default(autoincrement()) @map("customer_id")
   firstName  String @map("first_name")
   lastName   String @map("last_name")
+  userId     Int @map("user_id")
 
-  Addresses Address[] @relation(name: "address_customer_fk")
+  ownerUser User @relation(name: "customer_user_fk", fields: [userId], references: [userId], onDelete: Cascade)
+
+  addresses Address[] @relation(name: "address_customer_fk")
 
   orders Order[] @relation(name: "order_customer_fk")
 }
@@ -101,4 +104,5 @@ model User {
   username  String @unique @map("username")
 
   orders Order[] @relation(name: "user_order_fk")
+  customers Customer[] @relation(name: "customer_user_fk")
 }
