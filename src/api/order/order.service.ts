@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GetOrdersDto } from './dto/get-orders.dto';
 import { GetOrdersEntity } from './entities/get-orders.entity';
@@ -7,6 +7,8 @@ import { plainToInstance } from 'class-transformer';
 import { CreateOrderEntity } from './entities/create-order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from '@prisma/client';
+import { GetOrderParamDto } from './dto/get-order.dto';
+import { GetOrderDetailEntity } from './entities/get-order-details.entity';
 
 @Injectable()
 export class OrderService {
@@ -67,6 +69,42 @@ export class OrderService {
     };
 
     return plainToInstance(GetOrdersEntity, result);
+  }
+
+  async getOrderDetails(
+    param: GetOrderParamDto,
+  ): Promise<GetOrderDetailEntity> {
+    const order = await this.prismaService.order.findFirst({
+      where: {
+        orderId: param.orderId,
+      },
+      select: {
+        orderId: true,
+        customer: true,
+        shippingAddress: true,
+        recipientAddress: true,
+        expectedDeliveryDate: true,
+        shippingDate: true,
+        status: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException({
+        message: 'Resource not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    return plainToInstance(GetOrderDetailEntity, {
+      orderId: order.orderId,
+      customer: order.customer,
+      shippingAddress: order.shippingAddress,
+      recipientAddress: order.recipientAddress,
+      expectedDeliveryDate: order.expectedDeliveryDate,
+      shippingDate: order.shippingDate,
+      status: order.status,
+    });
   }
 
   async createOrder(

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CommonHeader } from '../../common/header/header.dto';
 import { GetOrdersDto } from './dto/get-orders.dto';
@@ -7,6 +15,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateOrderEntity } from './entities/create-order.entity';
 import { GetOrdersEntity } from './entities/get-orders.entity';
+import { GetOrderParamDto } from './dto/get-order.dto';
+import { GetOrderDetailEntity } from './entities/get-order-details.entity';
 
 @Controller('orders')
 export class OrderController {
@@ -28,5 +38,13 @@ export class OrderController {
     @Body() body: CreateOrderDto,
   ): Promise<CreateOrderEntity> {
     return await this.orderService.createOrder(header, body);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:orderId')
+  async getOrderDetails(
+    @Param() param: GetOrderParamDto,
+  ): Promise<GetOrderDetailEntity> {
+    return await this.orderService.getOrderDetails(param);
   }
 }
