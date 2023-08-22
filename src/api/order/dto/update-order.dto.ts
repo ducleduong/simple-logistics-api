@@ -1,6 +1,12 @@
-import { IsInt } from 'class-validator';
+import { OrderStatus } from '@prisma/client';
+import { IsEnum, IsInt, IsOptional } from 'class-validator';
 
 export class UpdateOrderDto {
   @IsInt()
-  shippingAddressId: number;
+  @IsOptional()
+  shippingAddressId?: number;
+
+  @IsEnum(OrderStatus)
+  @IsOptional()
+  status?: OrderStatus;
 }

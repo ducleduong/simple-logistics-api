@@ -5,16 +5,24 @@ import { GetReviewsEntity } from './entities/get-reviews.entity';
 import { plainToInstance } from 'class-transformer';
 import { CreateReviewEntity } from './entities/create-review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class ReviewService {
   constructor(private prismaService: PrismaService) {}
 
   async getReviews(header: CommonHeader): Promise<GetReviewsEntity> {
+    const user = await this.prismaService.user.findUnique({
+      where: { userId: parseInt(header.userId) },
+    });
+
+    let whereCondition: any;
+
+    if (user.role === Role.USER)
+      whereCondition['userId'] = parseInt(header.userId);
+
     const reviews = await this.prismaService.review.findMany({
-      where: {
-        userId: parseInt(header.userId),
-      },
+      where: whereCondition,
       select: {
         reviewId: true,
         content: true,

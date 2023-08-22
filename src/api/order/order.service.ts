@@ -12,7 +12,7 @@ import { CommonHeader } from '../../common/header/header.dto';
 import { plainToInstance } from 'class-transformer';
 import { CreateOrderEntity } from './entities/create-order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Role } from '@prisma/client';
 import { GetOrderDetailEntity } from './entities/get-order-details.entity';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UpdateOrderEntity } from './entities/update-order.entity';
@@ -25,9 +25,16 @@ export class OrderService {
     header: CommonHeader,
     query: GetOrdersDto,
   ): Promise<GetOrdersEntity> {
-    let whereCondition: any = {
-      userId: header.userId,
-    };
+    let whereCondition: any;
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        userId: parseInt(header.userId),
+      },
+    });
+
+    if (user.role === Role.USER)
+      whereCondition['userId'] = parseInt(header.userId);
 
     if (query?.customerName) {
       whereCondition = {
@@ -90,11 +97,25 @@ export class OrderService {
     return plainToInstance(GetOrdersEntity, result);
   }
 
-  async getOrderDetails(orderId: number): Promise<GetOrderDetailEntity> {
-    const order = await this.prismaService.order.findFirst({
+  async getOrderDetails(
+    header: CommonHeader,
+    orderId: number,
+  ): Promise<GetOrderDetailEntity> {
+    const user = await this.prismaService.user.findUnique({
       where: {
-        orderId: orderId,
+        userId: parseInt(header.userId),
       },
+    });
+
+    const whereCondition: any = {
+      orderId,
+    };
+
+    if (user.role === Role.USER)
+      whereCondition['userId'] = parseInt(header.userId);
+
+    const order = await this.prismaService.order.findFirst({
+      where: whereCondition,
       select: {
         orderId: true,
         customer: true,
@@ -185,13 +206,20 @@ export class OrderService {
         statusCode: HttpStatus.NOT_FOUND,
       });
 
-    if (order.userId !== parseInt(header.userId))
+    const user = await this.prismaService.user.findUnique({
+      where: { userId: parseInt(header.userId) },
+    });
+
+    if (
+      (order.userId !== parseInt(header.userId) && user.role === Role.USER) ||
+      (body.shippingAddressId && user.role !== Role.USER)
+    )
       throw new ForbiddenException({
         message: 'Do not have permission',
         statusCode: HttpStatus.FORBIDDEN,
       });
 
-    if (order.status !== OrderStatus.PENDING)
+    if (order.status !== OrderStatus.PENDING && user.role === Role.USER)
       throw new BadRequestException({
         message: `Cannot update order while status is ${order.status}`,
         statusCode: HttpStatus.BAD_REQUEST,
