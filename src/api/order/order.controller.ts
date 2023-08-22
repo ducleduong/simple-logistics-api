@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -15,8 +18,9 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateOrderEntity } from './entities/create-order.entity';
 import { GetOrdersEntity } from './entities/get-orders.entity';
-import { GetOrderParamDto } from './dto/get-order.dto';
 import { GetOrderDetailEntity } from './entities/get-order-details.entity';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderEntity } from './entities/update-order.entity';
 
 @Controller('orders')
 export class OrderController {
@@ -24,7 +28,7 @@ export class OrderController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  async getOrder(
+  async getOrders(
     @RequestHeader(CommonHeader) header: CommonHeader,
     @Query() query: GetOrdersDto,
   ): Promise<GetOrdersEntity> {
@@ -43,8 +47,27 @@ export class OrderController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/:orderId')
   async getOrderDetails(
-    @Param() param: GetOrderParamDto,
+    @Param('orderId', ParseIntPipe) orderId: number,
   ): Promise<GetOrderDetailEntity> {
-    return await this.orderService.getOrderDetails(param);
+    return await this.orderService.getOrderDetails(orderId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('/:orderId')
+  async updateOrder(
+    @RequestHeader(CommonHeader) header: CommonHeader,
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Body() body: UpdateOrderDto,
+  ): Promise<UpdateOrderEntity> {
+    return await this.orderService.updateOrder(header, orderId, body);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('/:orderId')
+  async DeleteOrderParamDto(
+    @RequestHeader(CommonHeader) header: CommonHeader,
+    @Param('orderId', ParseIntPipe) orderId: number,
+  ) {
+    return await this.orderService.deleteOrder(header, orderId);
   }
 }

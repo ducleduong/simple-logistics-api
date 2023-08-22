@@ -1,4 +1,10 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GetOrdersDto } from './dto/get-orders.dto';
 import { GetOrdersEntity } from './entities/get-orders.entity';
@@ -7,8 +13,9 @@ import { plainToInstance } from 'class-transformer';
 import { CreateOrderEntity } from './entities/create-order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from '@prisma/client';
-import { GetOrderParamDto } from './dto/get-order.dto';
 import { GetOrderDetailEntity } from './entities/get-order-details.entity';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderEntity } from './entities/update-order.entity';
 
 @Injectable()
 export class OrderService {
@@ -55,6 +62,12 @@ export class OrderService {
       orderBy: {
         [query?.orderBy || 'orderId']: query?.asc ? 'asc' : 'desc',
       },
+      select: {
+        orderId: true,
+        customer: true,
+        shippingDate: true,
+        status: true,
+      },
     });
 
     const total = await this.prismaService.order.count({
@@ -63,7 +76,13 @@ export class OrderService {
 
     const result = {
       total,
-      orders,
+      orders: orders.map(order => ({
+        orderId: order.orderId,
+        customerFirstName: order.customer.firstName,
+        customerLastName: order.customer.lastName,
+        shippingDate: order.shippingDate,
+        status: order.status,
+      })),
       limit: query?.limit || 20,
       offset: query?.offset * query?.limit || 0,
     };
@@ -71,18 +90,32 @@ export class OrderService {
     return plainToInstance(GetOrdersEntity, result);
   }
 
-  async getOrderDetails(
-    param: GetOrderParamDto,
-  ): Promise<GetOrderDetailEntity> {
+  async getOrderDetails(orderId: number): Promise<GetOrderDetailEntity> {
     const order = await this.prismaService.order.findFirst({
       where: {
-        orderId: param.orderId,
+        orderId: orderId,
       },
       select: {
         orderId: true,
         customer: true,
-        shippingAddress: true,
-        recipientAddress: true,
+        shippingAddress: {
+          select: {
+            city: { select: { name: true } },
+            state: { select: { name: true } },
+            country: { select: { name: true } },
+            address: true,
+            postalCode: true,
+          },
+        },
+        recipientAddress: {
+          select: {
+            city: { select: { name: true } },
+            state: { select: { name: true } },
+            country: { select: { name: true } },
+            address: true,
+            postalCode: true,
+          },
+        },
         expectedDeliveryDate: true,
         shippingDate: true,
         status: true,
@@ -99,8 +132,20 @@ export class OrderService {
     return plainToInstance(GetOrderDetailEntity, {
       orderId: order.orderId,
       customer: order.customer,
-      shippingAddress: order.shippingAddress,
-      recipientAddress: order.recipientAddress,
+      shippingAddress: {
+        address: order.shippingAddress.address,
+        city: order.shippingAddress.city.name,
+        state: order.shippingAddress.state.name,
+        country: order.shippingAddress.country.name,
+        postalCode: order.shippingAddress.postalCode,
+      },
+      recipientAddress: {
+        address: order.recipientAddress.address,
+        city: order.recipientAddress.city.name,
+        state: order.recipientAddress.state.name,
+        country: order.recipientAddress.country.name,
+        postalCode: order.recipientAddress.postalCode,
+      },
       expectedDeliveryDate: order.expectedDeliveryDate,
       shippingDate: order.shippingDate,
       status: order.status,
@@ -111,16 +156,50 @@ export class OrderService {
     header: CommonHeader,
     body: CreateOrderDto,
   ): Promise<CreateOrderEntity> {
-    const order = await this.prismaService.order.create({
+    const order = this.prismaService.order.create({
       data: {
         customerId: body.customerId,
         shippingAddressId: body.shippingAddressId,
         recipientAddressId: body.recipientAddressId,
-        status: OrderStatus.PENDING,
         expectedDeliveryDate: body.expectedDeliveryDate,
-        shippingDate: null,
+        status: OrderStatus.PENDING,
         userId: parseInt(header.userId),
       },
+    });
+
+    return plainToInstance(CreateOrderEntity, order);
+  }
+
+  async updateOrder(
+    header: CommonHeader,
+    orderId: number,
+    body: UpdateOrderDto,
+  ): Promise<UpdateOrderEntity> {
+    const order = await this.prismaService.order.findFirst({
+      where: { orderId: orderId },
+    });
+
+    if (!order)
+      throw new NotFoundException({
+        message: 'Order not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+
+    if (order.userId !== parseInt(header.userId))
+      throw new ForbiddenException({
+        message: 'Do not have permission',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+
+    if (order.status !== OrderStatus.PENDING)
+      throw new BadRequestException({
+        message: `Cannot update order while status is ${order.status}`,
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+
+    const updatedOrder = await this.prismaService.order.update({
+      where: { orderId: orderId },
+      data: { ...body },
       select: {
         customer: true,
         shippingAddress: true,
@@ -132,13 +211,40 @@ export class OrderService {
       },
     });
 
-    return plainToInstance(CreateOrderEntity, {
-      orderId: order.orderId,
-      customer: order.customer,
-      shippingAddress: order.shippingAddress,
-      recipientAddress: order.recipientAddress,
-      expectedDeliveryDate: order.expectedDeliveryDate,
-      status: order.status,
+    return plainToInstance(UpdateOrderEntity, {
+      orderId: updatedOrder.orderId,
+      customer: updatedOrder.customer,
+      shippingAddress: updatedOrder.shippingAddress,
+      recipientAddress: updatedOrder.recipientAddress,
+      expectedDeliveryDate: updatedOrder.expectedDeliveryDate,
+      status: updatedOrder.status,
     });
+  }
+
+  async deleteOrder(header: CommonHeader, orderId: number) {
+    const order = await this.prismaService.order.findFirst({
+      where: { orderId: orderId },
+    });
+
+    if (!order)
+      throw new NotFoundException({
+        message: 'Order not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+
+    if (order.userId !== parseInt(header.userId))
+      throw new ForbiddenException({
+        message: 'Do not have permission',
+        statusCode: HttpStatus.FORBIDDEN,
+      });
+
+    await this.prismaService.order.delete({
+      where: { orderId: orderId },
+    });
+
+    return {
+      message: 'successfully deleted order',
+      statusCode: HttpStatus.OK,
+    };
   }
 }

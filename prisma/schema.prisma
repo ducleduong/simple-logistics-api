@@ -58,7 +58,7 @@ model Customer {
   customerId Int    @id @default(autoincrement()) @map("customer_id")
   firstName  String @map("first_name")
   lastName   String @map("last_name")
-  userId     Int @map("user_id")
+  userId     Int    @map("user_id")
 
   ownerUser User @relation(name: "customer_user_fk", fields: [userId], references: [userId], onDelete: Cascade)
 
@@ -84,7 +84,7 @@ model Order {
   customerId           Int         @map("customer_id")
   recipientAddressId   Int         @map("recipient_address_id")
   shippingAddressId    Int         @map("shipping_address_id")
-  shippingDate         DateTime    @map("shipping_date")
+  shippingDate         DateTime?   @map("shipping_date")
   expectedDeliveryDate DateTime    @map("expected_delivery_date")
   status               OrderStatus @map("status")
   userId               Int         @map("user_id")
@@ -103,6 +103,6 @@ model User {
   password  String @map("password")
   username  String @unique @map("username")
 
-  orders Order[] @relation(name: "user_order_fk")
+  orders    Order[]    @relation(name: "user_order_fk")
   customers Customer[] @relation(name: "customer_user_fk")
 }

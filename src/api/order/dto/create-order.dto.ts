@@ -1,4 +1,4 @@
-import { IsDate, IsInt } from 'class-validator';
+import { IsInt, IsString } from 'class-validator';
 
 export class CreateOrderDto {
   @IsInt()
@@ -10,6 +10,6 @@ export class CreateOrderDto {
   @IsInt()
   shippingAddressId: number;
 
-  @IsDate()
-  expectedDeliveryDate: Date;
+  @IsString()
+  expectedDeliveryDate: string;
 }

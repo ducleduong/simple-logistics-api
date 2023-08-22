@@ -11,7 +11,6 @@ import { CreateCustomerEntity } from './entities/create-customer.entity';
 export class CustomerService {
   constructor(private prismaService: PrismaService) {}
 
-  //Get Customers
   async getCustomers(
     header: CommonHeader,
     query: GetCustomerDto,
@@ -40,12 +39,27 @@ export class CustomerService {
 
     const customers = this.prismaService.customer.findMany({
       where: whereCondition,
+      select: {
+        customerId: true,
+        firstName: true,
+        lastName: true,
+        userId: true,
+        addresses: {
+          select: {
+            address: true,
+            addressId: true,
+            country: true,
+            city: true,
+            state: true,
+            postalCode: true,
+          },
+        },
+      },
     });
 
     return plainToInstance(GetCustomerEntity, customers);
   }
 
-  //Create a new customer
   async createCustomer(
     header: CommonHeader,
     body: CreateCustomerDto,

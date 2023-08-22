@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -37,5 +38,8 @@ export class GetOrdersDto {
   orderBy?: string;
 
   @IsBoolean()
+  @Transform(({ value }) => (value === 'true' ? true : false), {
+    toClassOnly: true,
+  })
   asc: boolean = true;
 }
