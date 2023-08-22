@@ -95,6 +95,12 @@ model Order {
   user             User     @relation(name: "user_order_fk", fields: [userId], references: [userId], onDelete: Cascade)
 }
 
+enum Role {
+  ADMIN
+  USER
+  STAFF
+}
+
 model User {
   userId    Int    @id @default(autoincrement()) @map("user_id")
   firstName String @map("first_name")
@@ -102,6 +108,7 @@ model User {
   email     String @unique @map("email")
   password  String @map("password")
   username  String @unique @map("username")
+  role      Role   @default(USER) @map("role")
 
   orders    Order[]    @relation(name: "user_order_fk")
   customers Customer[] @relation(name: "customer_user_fk")

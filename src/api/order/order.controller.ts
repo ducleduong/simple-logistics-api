@@ -47,9 +47,10 @@ export class OrderController {
   @UseGuards(AuthGuard('jwt'))
   @Get('/:orderId')
   async getOrderDetails(
+    @RequestHeader(CommonHeader) header: CommonHeader,
     @Param('orderId', ParseIntPipe) orderId: number,
   ): Promise<GetOrderDetailEntity> {
-    return await this.orderService.getOrderDetails(orderId);
+    return await this.orderService.getOrderDetails(header, orderId);
   }
 
   @UseGuards(AuthGuard('jwt'))
