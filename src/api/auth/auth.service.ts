@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterEntity } from './entities/register.entity';
 import { plainToInstance } from 'class-transformer';
@@ -37,7 +37,7 @@ export class AuthService {
       if (error.code === 'P2002') {
         throw new BadRequestException({
           message: `${error.meta.target.join(', ')} already exists`,
-          statusCode: 400,
+          statusCode: HttpStatus.BAD_REQUEST,
         });
       }
     }
@@ -53,7 +53,7 @@ export class AuthService {
     if (!user)
       throw new BadRequestException({
         message: 'incorrect username or password',
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
       });
 
     const match = await bcrypt.compare(body.password, user.password);
@@ -61,7 +61,7 @@ export class AuthService {
     if (!match)
       throw new BadRequestException({
         message: 'incorrect username or password',
-        statusCode: 400,
+        statusCode: HttpStatus.BAD_REQUEST,
       });
 
     const accessToken = await this.convertJwt(user.userId);
@@ -77,7 +77,7 @@ export class AuthService {
     };
 
     return this.jwtService.signAsync(payload, {
-      expiresIn: '10m',
+      expiresIn: '10h',
       secret: process.env.JWT_SECRET,
     });
   }

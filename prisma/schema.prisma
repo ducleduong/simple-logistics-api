@@ -58,20 +58,36 @@ model Customer {
   customerId Int    @id @default(autoincrement()) @map("customer_id")
   firstName  String @map("first_name")
   lastName   String @map("last_name")
+  userId     Int    @map("user_id")
 
-  Addresses Address[] @relation(name: "address_customer_fk")
+  ownerUser User @relation(name: "customer_user_fk", fields: [userId], references: [userId], onDelete: Cascade)
+
+  addresses Address[] @relation(name: "address_customer_fk")
 
   orders Order[] @relation(name: "order_customer_fk")
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  FAILED
+  RETURNED
+  REFUNDED
+}
+
 model Order {
-  orderId              Int      @id @default(autoincrement()) @map("order_id")
-  customerId           Int      @map("customer_id")
-  recipientAddressId   Int      @map("recipient_address_id")
-  shippingAddressId    Int      @map("shipping_address_id")
-  shippingDate         DateTime @map("shipping_date")
-  expectedDeliveryDate DateTime @map("expected_delivery_date")
-  userId               Int      @map("user_id")
+  orderId              Int         @id @default(autoincrement()) @map("order_id")
+  customerId           Int         @map("customer_id")
+  recipientAddressId   Int         @map("recipient_address_id")
+  shippingAddressId    Int         @map("shipping_address_id")
+  shippingDate         DateTime?   @map("shipping_date")
+  expectedDeliveryDate DateTime    @map("expected_delivery_date")
+  status               OrderStatus @map("status")
+  userId               Int         @map("user_id")
 
   customer         Customer @relation(name: "order_customer_fk", fields: [customerId], references: [customerId])
   recipientAddress Address  @relation(name: "order_recipient_address_fk", fields: [recipientAddressId], references: [addressId])
@@ -87,5 +103,6 @@ model User {
   password  String @map("password")
   username  String @unique @map("username")
 
-  orders Order[] @relation(name: "user_order_fk")
+  orders    Order[]    @relation(name: "user_order_fk")
+  customers Customer[] @relation(name: "customer_user_fk")
 }
