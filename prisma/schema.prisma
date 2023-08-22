@@ -12,7 +12,7 @@ datasource db {
 
 model City {
   id      Int    @id @default(autoincrement()) @map("id")
-  name    String @map("name")
+  name    String @unique @map("name")
   stateId Int    @map("state_id")
 
   state   State     @relation(name: "state_cities_fk", fields: [stateId], references: [id], onDelete: Cascade)
@@ -21,14 +21,14 @@ model City {
 
 model Country {
   id      Int       @id @default(autoincrement()) @map("id")
-  name    String    @map("name")
+  name    String    @unique @map("name")
   states  State[]   @relation(name: "countries_states_fk")
   Address Address[]
 }
 
 model State {
   id        Int    @id @default(autoincrement()) @map("id")
-  name      String @map("name")
+  name      String @unique @map("name")
   countryId Int    @map("country_id")
 
   cities City[] @relation(name: "state_cities_fk")
