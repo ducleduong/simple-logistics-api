@@ -105,4 +105,14 @@ model User {
 
   orders    Order[]    @relation(name: "user_order_fk")
   customers Customer[] @relation(name: "customer_user_fk")
+  Review    Review[]   @relation(name: "review_user_fk")
+}
+
+model Review {
+  reviewId Int    @id @default(autoincrement()) @map("review_id")
+  rating   Int    @map("rating")
+  content  String @map("content")
+  userId   Int    @map("user_id")
+
+  user User @relation(name: "review_user_fk", fields: [userId], references: [userId], onDelete: Cascade)
 }

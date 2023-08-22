@@ -9,6 +9,7 @@ import { OrderModule } from './api/order/order.module';
 import { CustomerService } from './api/customer/customer.service';
 import { CustomerModule } from './api/customer/customer.module';
 import { AddressModule } from './api/address/address.module';
+import { ReviewModule } from './api/review/review.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AddressModule } from './api/address/address.module';
     OrderModule,
     CustomerModule,
     AddressModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService, CustomerService],
