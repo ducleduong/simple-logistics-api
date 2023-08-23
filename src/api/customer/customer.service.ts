@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CommonHeader } from '../../common/header/header.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GetCustomerDto } from './dto/get-customer.dto';
@@ -6,6 +6,7 @@ import { GetCustomerEntity } from './entities/get-customer.entity';
 import { plainToInstance } from 'class-transformer';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CreateCustomerEntity } from './entities/create-customer.entity';
+import { CheckCustomerDto } from './dto/check-customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -73,5 +74,26 @@ export class CustomerService {
     });
 
     return plainToInstance(CreateCustomerEntity, customer);
+  }
+
+  async checkCustomer(header: CommonHeader, query: CheckCustomerDto) {
+    const customer = await this.prismaService.customer.findFirst({
+      where: {
+        firstName: query.firstName,
+        lastName: query.lastName,
+        userId: parseInt(header.userId),
+      },
+      include: {
+        addresses: true,
+      },
+    });
+
+    if (!customer)
+      throw new NotFoundException({
+        message: 'Customer not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      });
+
+    return customer;
   }
 }

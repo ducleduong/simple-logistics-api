@@ -39,6 +39,7 @@ export class AddressService {
         city: true,
         address: true,
         postalCode: true,
+        addressId: true,
       },
     });
 
@@ -48,6 +49,30 @@ export class AddressService {
       state: address.state.name,
       city: address.city.name,
       postalCode: address.postalCode,
+      addressId: address.addressId,
     });
+  }
+
+  async getCountries() {
+    const countries = await this.prismaService.country.findMany({
+      select: {
+        id: true,
+        name: true,
+        states: {
+          select: {
+            id: true,
+            name: true,
+            cities: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return countries;
   }
 }

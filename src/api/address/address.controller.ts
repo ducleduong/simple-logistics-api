@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AddressService } from './address.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateAddressDto } from './dto/create-address.dto';
@@ -14,5 +14,11 @@ export class AddressController {
     @Body() body: CreateAddressDto,
   ): Promise<CreateAddressEntity> {
     return this.addressService.createAddress(body);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/countries')
+  async getCountries() {
+    return await this.addressService.getCountries();
   }
 }
