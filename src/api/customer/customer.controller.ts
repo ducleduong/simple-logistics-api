@@ -7,6 +7,7 @@ import { GetCustomerDto } from './dto/get-customer.dto';
 import { GetCustomerEntity } from './entities/get-customer.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CreateCustomerEntity } from './entities/create-customer.entity';
+import { CheckCustomerDto } from './dto/check-customer.dto';
 
 @Controller('customers')
 export class CustomerController {
@@ -28,5 +29,14 @@ export class CustomerController {
     @Body() body: CreateCustomerDto,
   ): Promise<CreateCustomerEntity> {
     return this.customerService.createCustomer(header, body);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/check')
+  async checkCustomer(
+    @RequestHeader(CommonHeader) header: CommonHeader,
+    @Query() query: CheckCustomerDto,
+  ): Promise<any> {
+    return await this.customerService.checkCustomer(header, query);
   }
 }

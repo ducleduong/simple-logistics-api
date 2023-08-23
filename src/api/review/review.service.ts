@@ -16,7 +16,7 @@ export class ReviewService {
       where: { userId: parseInt(header.userId) },
     });
 
-    let whereCondition: any;
+    const whereCondition: any = {};
 
     if (user.role === Role.USER)
       whereCondition['userId'] = parseInt(header.userId);

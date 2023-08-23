@@ -15,4 +15,7 @@ export class CreateAddressEntity {
 
   @Expose()
   postalCode: string;
+
+  @Expose()
+  addressId: number;
 }

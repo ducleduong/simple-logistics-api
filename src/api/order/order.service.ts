@@ -25,7 +25,7 @@ export class OrderService {
     header: CommonHeader,
     query: GetOrdersDto,
   ): Promise<GetOrdersEntity> {
-    let whereCondition: any;
+    let whereCondition: any = {};
 
     const user = await this.prismaService.user.findUnique({
       where: {
