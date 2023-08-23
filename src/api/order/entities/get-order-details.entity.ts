@@ -11,13 +11,13 @@ class Customer {
 
 class Address {
   @Expose()
-  country: string;
+  countryId: number;
 
   @Expose()
-  state: string;
+  stateId: number;
 
   @Expose()
-  city: string;
+  cityId: number;
 
   @Expose()
   address: string;
